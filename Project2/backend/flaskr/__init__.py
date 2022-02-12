@@ -17,7 +17,7 @@ def create_app(test_config=None):
     """
     @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
     """
-    CORS(app, resources={r"/api/*": {"origins":"*"}})
+    CORS(app, resources={'/': {'origins': '*'}})
     
     """
     @TODO: Use the after_request decorator to set Access-Control-Allow
@@ -204,34 +204,54 @@ def create_app(test_config=None):
     one question at a time is displayed, the user is allowed to answer
     and shown whether they were correct or not.
     """
+    
+
     @app.route('/quizzes', methods=['POST'])
     def Play():
-        try:
-          Body = request.get_json()
-          quiz_category = Body.get('quiz_category')
-          questions = Body.get('previous_questions')
-          
 
-          if((quiz_category is None) or (questions is None)):
-            abort(400)
-
-          if(quiz_category['id'] == 0):
-            All_questions = Question.query.filter(Question.id.notin_((questions))).all()
-
-          else:
-            All_questions = Question.query.filter(Question.id.notin_(questions), 
-            Question.category == quiz_category['id']).all()
-
-          if(All_questions):
-            Questions = random.choice(All_questions)
-
-          return jsonify({
-            'success': True,
-            'question': Questions.format()
-          })
-        except:
+        Body = request.get_json()
+       
+        if not ('previous_questions' in Body or 'quiz_category' in Body ):
             abort(422)
         
+        previous_questions = Body.get('previous_questions')
+        quiz_category = Body.get('quiz_category')
+        ID = quiz_category['id']
+
+        if (ID != 0):
+            
+            AllQuestion = Question.query.filter_by(category=ID).all()
+        
+        else:
+            AllQuestion = Question.query.all()
+
+        def RandomQuestion():
+            RandomVar = AllQuestion[random.randrange(0, len(AllQuestion), 1)]
+            return RandomVar
+
+        def UsedQuestion(questionVal):
+            Randoms = False
+            for var in previous_questions:
+                if (var == questionVal.id):
+                    Randoms = True
+
+            return Randoms
+        
+        Val = RandomQuestion()
+       
+        while (UsedQuestion(Val)):
+            Val = RandomQuestion()
+
+            if (len(previous_questions) == len(AllQuestion)):
+                return jsonify({
+                    'success': True
+                })
+
+        
+        return jsonify({
+            'success': True,
+            'question': Val.format()
+        })
 
 
     """
@@ -263,8 +283,5 @@ def create_app(test_config=None):
         }), 400
 
     
-
-
-
     return app
 
