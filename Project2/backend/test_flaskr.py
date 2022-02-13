@@ -130,7 +130,7 @@ class TriviaTestCase(unittest.TestCase):
 
 
     def test_delete(self):
-        Result = self.client().delete('/questions/11')
+        Result = self.client().delete('/questions/17')
         self.assertEqual(Result.status_code, 200)
 
     def test_fails_delete(self):
