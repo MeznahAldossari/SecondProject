@@ -8,7 +8,7 @@ import random
 
 from models import setup_db, Question, Category
 
-       
+
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__)
@@ -18,14 +18,18 @@ def create_app(test_config=None):
     @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
     """
     CORS(app, resources={'/': {'origins': '*'}})
-    
+
     """
     @TODO: Use the after_request decorator to set Access-Control-Allow
     """
     @app.after_request
     def after_request(Res):
-        Res.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-        Res.headers.add('Access-Control-Allow-Headers', 'GET, POST, PATCH, DELETE, OPTIONS')
+        Res.headers.add(
+            'Access-Control-Allow-Headers',
+            'Content-Type, Authorization')
+        Res.headers.add(
+            'Access-Control-Allow-Headers',
+            'GET, POST, PATCH, DELETE, OPTIONS')
         return Res
     """
     @TODO:
@@ -34,19 +38,17 @@ def create_app(test_config=None):
     """
     @app.route('/categories')
     def categ():
-       try: 
-        All_Category= Category.query.all()
-        Categories = [category.format() for category in All_Category]
+        try:
+            All_Category = Category.query.all()
+            Categories = [category.format() for category in All_Category]
 
-        return jsonify({
-            'success': True,
-            'categories':Categories
-            
-        })
-       except:
-           abort(404)
+            return jsonify({
+                'success': True,
+                'categories': Categories
 
-
+            })
+        except BaseException:
+            abort(404)
 
     """
     @TODO:
@@ -54,7 +56,7 @@ def create_app(test_config=None):
     including pagination (every 10 questions).
     This endpoint should return a list of questions,
     number of total questions, current category, categories.
-    
+
 
     TEST: At this point, when you start the application
     you should see questions and categories generated,
@@ -62,36 +64,35 @@ def create_app(test_config=None):
     Clicking on the page numbers should update the questions.
     """
     def Pages(Req, Select):
-       Page = Req.args.get('page', 1, type=int)
-       First = (Page - 1) * 10
-       End = First + 10
+        Page = Req.args.get('page', 1, type=int)
+        First = (Page - 1) * 10
+        End = First + 10
 
-       All_Questions = [question.format() for question in Select]
-       Questions = All_Questions[First:End]
+        All_Questions = [question.format() for question in Select]
+        Questions = All_Questions[First:End]
 
-       return Questions
-
+        return Questions
 
     @app.route('/questions')
     def All_Questions():
-      try:
-        Questions = Question.query.all()
-        var = Pages(request,Questions) 
-        Categories = Category.query.all()
+        try:
+            Questions = Question.query.all()
+            var = Pages(request, Questions)
+            Categories = Category.query.all()
 
-        List = {}
-        for categories in Categories:
-            List[categories.id] =categories.type
-            
-        return jsonify({
-            'success': True,
-            'questions':var,
-            'total_questions':len(Questions),
-            'categories': List
-            
-        })
-      except:
-          abort(404)
+            List = {}
+            for categories in Categories:
+                List[categories.id] = categories.type
+
+            return jsonify({
+                'success': True,
+                'questions': var,
+                'total_questions': len(Questions),
+                'categories': List
+
+            })
+        except BaseException:
+            abort(404)
 
     """
     @TODO:
@@ -100,22 +101,23 @@ def create_app(test_config=None):
     TEST: When you click the trash icon next to a question, the question will be removed.
     This removal will persist in the database and when you refresh the page.
     """
-    
-    @app.route('/questions/<int:delete_question>', methods =['DELETE'])
+
+    @app.route('/questions/<int:delete_question>', methods=['DELETE'])
     def delete(delete_question):
-      try:
-        ID = delete_question
-        Delete_Question = Question.query.filter(Question.id == ID).one_or_none()
-        
-        Delete_Question.delete()
-        
-        return jsonify({
-            'success': True,
-            'deleted': ID
-            
-        })
-      except:
-          abort(422)
+        try:
+            ID = delete_question
+            Delete_Question = Question.query.filter(
+                Question.id == ID).one_or_none()
+
+            Delete_Question.delete()
+
+            return jsonify({
+                'success': True,
+                'deleted': ID
+
+            })
+        except BaseException:
+            abort(422)
     """
     @TODO:
     Create an endpoint to POST a new question,
@@ -134,10 +136,10 @@ def create_app(test_config=None):
         new_answer = body.get('answer')
         new_difficulty = body.get('difficulty')
         new_category = body.get('category')
-        
+
         question = Question(question=new_question, answer=new_answer,
-         difficulty=new_difficulty,category=new_category)
-        
+                            difficulty=new_difficulty, category=new_category)
+
         question.insert()
 
         return jsonify({
@@ -159,22 +161,22 @@ def create_app(test_config=None):
     def Searching_questions():
 
         Body = request.get_json()
-        Search = Body.get('searchTerm',None)
-        
-        format =  '%{}%'.format(Search)
+        Search = Body.get('searchTerm', None)
+
+        format = '%{}%'.format(Search)
         Results = Question.query.filter(Question.question.ilike(format)).all()
         print(Results)
 
         return jsonify({
-            'success':True,
+            'success': True,
             'questions': [question.format() for question in Results]
 
         })
- 
+
     """
     @TODO:
     Create a GET endpoint to get questions based on category.
-    
+
     TEST: In the "List" tab / main screen, clicking on one of the
     categories in the left column will cause only questions of that
     category to be shown.
@@ -186,12 +188,10 @@ def create_app(test_config=None):
         results = [question.format() for question in retrive]
 
         return jsonify({
-            'success':True,
+            'success': True,
             'questions': results
 
         })
-
-
 
     """
     @TODO:
@@ -204,24 +204,23 @@ def create_app(test_config=None):
     one question at a time is displayed, the user is allowed to answer
     and shown whether they were correct or not.
     """
-    
 
     @app.route('/quizzes', methods=['POST'])
     def Play():
 
         Body = request.get_json()
-       
-        if not ('previous_questions' in Body or 'quiz_category' in Body ):
+
+        if not ('previous_questions' in Body or 'quiz_category' in Body):
             abort(422)
-        
+
         previous_questions = Body.get('previous_questions')
         quiz_category = Body.get('quiz_category')
         ID = quiz_category['id']
 
         if (ID != 0):
-            
+
             AllQuestion = Question.query.filter_by(category=ID).all()
-        
+
         else:
             AllQuestion = Question.query.all()
 
@@ -236,9 +235,9 @@ def create_app(test_config=None):
                     Randoms = True
 
             return Randoms
-        
+
         Val = RandomQuestion()
-       
+
         while (UsedQuestion(Val)):
             Val = RandomQuestion()
 
@@ -247,12 +246,10 @@ def create_app(test_config=None):
                     'success': True
                 })
 
-        
         return jsonify({
             'success': True,
             'question': Val.format()
         })
-
 
     """
     @TODO:
@@ -274,7 +271,7 @@ def create_app(test_config=None):
             'error': 404,
             'message': "Resouce Not Found"
         }), 404
-    
+
     def BadRequest(Error):
         return jsonify({
             'success': False,
@@ -282,6 +279,4 @@ def create_app(test_config=None):
             'message': "Bad Request"
         }), 400
 
-    
     return app
-
